@@ -3,9 +3,10 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const passport = require('passport');
 const passportLocal = require('passport-local').Strategy;
-const cookieParser = require('cookie-parser');
+// const cookieParser = require('cookie-parser');
 const bcrypt = require('bcryptjs');
 const session = require('express-session');
+const MongoStore = require('connect-mongo')(session);
 const bodyParser = require('body-parser');
 const User = require('./models/user');
 require('dotenv').config();
@@ -35,11 +36,12 @@ app.use(
 app.use(
   session({
     secret: 'secretcode',
+    store: new MongoStore({ mongooseConnection: mongoose.connection }),
     resave: true,
     saveUninitialized: true,
   })
 );
-app.use(cookieParser('secretcode'));
+// app.use(cookieParser('secretcode'));
 app.use(passport.initialize());
 app.use(passport.session());
 require('./services/passport')(passport);
@@ -48,6 +50,8 @@ require('./services/passport')(passport);
 // ROUTES
 app.get('/', (req, res) => res.send('Hello'));
 app.post('/login', (req, res, next) => {
+  console.log(req.cookies);
+  console.log(req.sessionID);
   passport.authenticate('local', (err, user, info) => {
     if (err) {
       return next(err);
